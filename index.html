@@ -458,20 +458,30 @@
                     </div>
                 </div>
 
-                <div class="pix-box">
-                    <h3>Pagamento via Pix Corporativo</h3>
-                    <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
-                        Para garantir a rastreabilidade SISBACEN, utilize a chave corporativa abaixo.
-                        <br><strong>Beneficiário:</strong> SecurePay Soluções Financeiras LTDA
-                    </p>
-                    
-                    <div class="pix-key" id="pix-key-display" onclick="copyPix()" title="Clique para copiar">
-    Carregando chave...
-</div>
+               <div class="pix-box">
+    <h3>Pagamento via Pix QR Code</h3>
+    <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
+        Escaneie o QR Code abaixo com o app do seu banco.
+        <br><strong>Beneficiário:</strong> <span id="beneficiario-qr"></span>
+    </p>
+    
+    <!-- O QR Code será gerado aqui -->
+    <div id="qrcode-container" style="margin: 20px auto; width: 200px; height: 200px; background: white; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px;">
+        <p style="color: var(--gray);">Gerando QR Code...</p>
+    </div>
 
-                    <button class="btn btn-success" onclick="alert('Chave copiada para a área de transferência!')">
-                        Copiar Chave Pix
-                    </button>
+    <div style="text-align: left; margin-bottom: 15px;">
+        <strong>Valor a Pagar:</strong>
+        <div id="pix-valor-display" style="font-size: 1.5rem; font-weight: bold; color: var(--primary); margin-top: 5px;">R$ 0,00</div>
+    </div>
+
+    <button class="btn btn-success" onclick="copyPixCopiaECola()" style="width: 100%;">
+        Copiar Código "Copia e Cola"
+    </button>
+    <small style="display: block; margin-top: 10px; color: var(--gray);">
+        Se o QR Code não funcionar, copie o código acima e cole no app do seu banco.
+    </small>
+</div>
                 </div>
             </div>
         </div>
