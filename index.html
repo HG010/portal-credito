@@ -558,21 +558,48 @@
         }
 
         function gerarPixCopiaECola(valor) {
-            let payload = "000201";
-            payload += montaCampo("01", "12");
-            const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
-            payload += montaCampo("26", merchantAccount);
-            payload += montaCampo("52", "0000");
-            payload += montaCampo("53", "986");
-            payload += montaCampo("54", formatarValorPix(valor));
-            payload += montaCampo("58", PIX_RECEBEDOR_NOME);
-            payload += montaCampo("59", PIX_RECEBEDOR_CIDADE);
-            payload += "6304";
-            const crc = calculaCRC16(payload);
-            payload += crc;
-            return payload;
-        }
+    // 1. Formata o valor (ex: 400,00)
+    const valorFormatado = valor.toFixed(2).replace('.', ',');
 
+    // 2. Função auxiliar para montar campos
+    function montaCampo(id, valor) {
+        return id + valor.length.toString().padStart(2, '0') + valor;
+    }
+
+    // 3. Monta o payload SEM nome e cidade (Opcionais)
+    let payload = "000201"; // Payload Format Indicator
+    payload += montaCampo("01", "12"); // Point of Initiation Method (QR Code)
+    
+    // Merchant Account Information (Campo 26)
+    // Estrutura: 26 + Tamanho + 0010br.gov.bcb + 01 + TamanhoChave + Chave
+    const chave = PIX_CHAVE;
+    const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", chave);
+    payload += montaCampo("26", merchantAccount);
+    
+    payload += montaCampo("52", "0000"); // Merchant Category Code
+    payload += montaCampo("53", "986"); // Transaction Currency (BRL)
+    payload += montaCampo("54", valorFormatado); // Transaction Amount
+    
+    // 4. Calcula o CRC16
+    // IMPORTANTE: O CRC16 é calculado sobre o payload ANTES de adicionar o 6304
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+        crc ^= payload.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+            if ((crc & 0x8000) > 0) {
+                crc = (crc << 1) ^ 0x1021;
+            } else {
+                crc <<= 1;
+            }
+        }
+    }
+    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+    
+    // 5. Adiciona o campo final: 6304 + CRC
+    payload += "6304" + crcHex;
+
+    return payload;
+}
         // ==========================================
         // LÓGICA DE AUTENTICAÇÃO (FAKE)
         // ==========================================
