@@ -558,30 +558,46 @@
         }
 
         function gerarPixCopiaECola(valor) {
-    // 1. Formata o valor (ex: 400,00)
+    // 1. Formata o valor no padrão Pix (ex: 400,00)
     const valorFormatado = valor.toFixed(2).replace('.', ',');
 
-    // 2. Função auxiliar para montar campos
+    // 2. Função auxiliar para montar campos com tamanho correto
     function montaCampo(id, valor) {
+        // O tamanho é SEMPRE 2 dígitos
         return id + valor.length.toString().padStart(2, '0') + valor;
     }
 
-    // 3. Monta o payload SEM nome e cidade (Opcionais)
-    let payload = "000201"; // Payload Format Indicator
-    payload += montaCampo("01", "12"); // Point of Initiation Method (QR Code)
+    // 3. Monta o payload
+    let payload = "000201"; // Payload Format Indicator (Fixo)
+    payload += montaCampo("01", "12"); // Point of Initiation Method (Fixo: QR Code)
     
-    // Merchant Account Information (Campo 26)
-    // Estrutura: 26 + Tamanho + 0010br.gov.bcb + 01 + TamanhoChave + Chave
+    // 4. Merchant Account Information (Campo 26)
+    // A estrutura correta é:
+    // - ID 26
+    // - Tamanho TOTAL do conteúdo (que inclui os subcampos)
+    // - Subcampo 00: br.gov.bcb
+    // - Subcampo 01: Sua Chave
     const chave = PIX_CHAVE;
-    const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", chave);
-    payload += montaCampo("26", merchantAccount);
     
+    // Calcula o tamanho do subcampo 00 (fixo: "br.gov.bcb" tem 10 chars)
+    const subcampo00 = montaCampo("00", "br.gov.bcb");
+    
+    // Calcula o tamanho do subcampo 01 (sua chave)
+    const subcampo01 = montaCampo("01", chave);
+    
+    // O conteúdo total do campo 26 é a soma do subcampo00 + subcampo01
+    const conteudoCampo26 = subcampo00 + subcampo01;
+    
+    // Adiciona o campo 26 com o tamanho correto
+    payload += montaCampo("26", conteudoCampo26);
+    
+    // 5. Campos Obrigatórios
     payload += montaCampo("52", "0000"); // Merchant Category Code
     payload += montaCampo("53", "986"); // Transaction Currency (BRL)
     payload += montaCampo("54", valorFormatado); // Transaction Amount
     
-    // 4. Calcula o CRC16
-    // IMPORTANTE: O CRC16 é calculado sobre o payload ANTES de adicionar o 6304
+    // 6. Calcula o CRC16
+    // O CRC16 é calculado sobre o payload ANTES de adicionar o campo 6304
     let crc = 0xFFFF;
     for (let i = 0; i < payload.length; i++) {
         crc ^= payload.charCodeAt(i) << 8;
@@ -595,7 +611,7 @@
     }
     const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
     
-    // 5. Adiciona o campo final: 6304 + CRC
+    // 7. Adiciona o campo final: 6304 + CRC
     payload += "6304" + crcHex;
 
     return payload;
