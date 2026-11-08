@@ -582,12 +582,52 @@
     // 1. Formata o valor no padrão Pix (ex: 400,00)
     const valorFormatado = valor.toFixed(2).replace('.', ',');
 
-    // 2. Função auxiliar para montar os campos com tamanho
+    // 2. Função auxiliar para montar os campos com tamanho CORRETO
     function montaCampo(id, valor) {
         // O tamanho é sempre 2 dígitos. Ex: se o valor tem 10 chars, o campo é "10"
+        // IMPORTANTE: O tamanho é calculado ANTES de adicionar o ID
         return id + valor.length.toString().padStart(2, '0') + valor;
     }
 
+    // 3. Monta os campos fixos
+    let payload = "";
+    payload += "000201"; // Payload Format Indicator (Fixo)
+    payload += montaCampo("01", "12"); // Point of Initiation Method (Fixo: QR Code)
+    
+    // Merchant Account Information (Campo 26)
+    // Este campo é "composto". Ele contém:
+    // - Campo 00: br.gov.bcb (Fixo)
+    // - Campo 01: Sua Chave Pix
+    const merchantAccount = montaCampo("00", "br.gov.bcb") + montaCampo("01", PIX_CHAVE);
+    payload += montaCampo("26", merchantAccount);
+    
+    payload += montaCampo("52", "0000"); // Merchant Category Code (Fixo: 0000)
+    payload += montaCampo("53", "986"); // Transaction Currency (Fixo: BRL)
+    payload += montaCampo("54", valorFormatado); // Transaction Amount (O valor da taxa)
+    payload += montaCampo("58", PIX_RECEBEDOR_NOME); // Merchant Name (Sua Empresa)
+    payload += montaCampo("59", PIX_RECEBEDOR_CIDADE); // Merchant City (Sua Cidade)
+    
+    // 4. Calcula o CRC16
+    // O CRC16 é calculado sobre o payload ANTES de adicionar o campo 6304
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+        crc ^= payload.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) {
+            if ((crc & 0x8000) > 0) {
+                crc = (crc << 1) ^ 0x1021;
+            } else {
+                crc <<= 1;
+            }
+        }
+    }
+    // Converte para hexadecimal e garante 4 dígitos
+    const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+    
+    // 5. Adiciona o campo final: 6304 + CRC
+    payload += "6304" + crcHex;
+
+    return payload;
+}
     // 3. Monta os campos fixos
     let payload = "";
     payload += "000201"; // Payload Format Indicator (Fixo)
