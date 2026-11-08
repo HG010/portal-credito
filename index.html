@@ -350,7 +350,7 @@
         }
     </style>
     <!-- Biblioteca QR Code -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -705,39 +705,32 @@
         }
 
         function renderizarQrCode() {
-            // Gera o payload "Copia e Cola"
-            currentPixPayload = gerarPixCopiaECola(feeAmount);
-            
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; // Limpa o "Gerando..."
+    // Gera o payload "Copia e Cola"
+    currentPixPayload = gerarPixCopiaECola(feeAmount);
+    
+    const container = document.getElementById('qrcode-container');
+    container.innerHTML = ''; // Limpa o "Gerando..."
 
-            // Verifica se a biblioteca QRCode carregou
-            if (typeof QRCode === 'undefined') {
-                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Erro: Biblioteca de QR Code não carregou. Use o botão de copiar abaixo.</p>';
-                return;
-            }
+    // Verifica se a biblioteca QRCode carregou
+    if (typeof QRCode === 'undefined') {
+        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Erro: Biblioteca de QR Code não carregou. Use o botão de copiar abaixo.</p>';
+        return;
+    }
 
-            try {
-                QRCode.toCanvas(container, currentPixPayload, { 
-                    width: 200, 
-                    height: 200,
-                    color: { 
-                        dark: "#000000", 
-                        light: "#ffffff" 
-                    },
-                    errorCorrectionLevel: 'M' // Melhora a leitura em telas
-                }, function (error) {
-                    if (error) {
-                        console.error("Erro ao gerar QR Code:", error);
-                        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
-                    }
-                });
-            } catch (e) {
-                console.error("Exceção ao gerar QR Code:", e);
-                container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
-            }
-        }
-
+    try {
+        // Sintaxe da qrcodejs (1.0.0)
+        new QRCode(container, {
+            text: currentPixPayload,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff"
+        });
+    } catch (e) {
+        console.error("Exceção ao gerar QR Code:", e);
+        container.innerHTML = '<p style="color: red; font-size: 0.9rem;">Falha ao gerar QR Code. Use o botão de copiar abaixo.</p>';
+    }
+}
         // ==========================================
         // FUNÇÃO DE COPIAR (ROBUSTA)
         // ==========================================
